@@ -20,41 +20,41 @@ bwm1.extract("out.png","out_wm.png")
 
 要嵌入水印的原图`lena_grey.png`和水印图片`wm.png`
 
-![lena](https://github.com/fire-keeper/BlindWatermark/blob/master/pic/lena_grey.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/200)  ![watermark](https://github.com/fire-keeper/BlindWatermark/blob/master/pic/wm.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/100) 
+![lena](./pic/lena_grey.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/200)  ![watermark](./pic/wm.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/100) 
 
 嵌入后的图片
 
-![嵌入水印后的图片](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/output/attack/ori_lena.png)
+![嵌入水印后的图片](./pics_for_show/grey/output/attack/ori_lena.png)
 
 提取出的图片
 
-![提取出的图片](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/extract/ori_wm.png)
+![提取出的图片](./pics_for_show/grey/extract/ori_wm.png)
 
 #### 各种攻击以及提取出的水印
 
 | 攻击方式     | 攻击后的图片                                                 | 提取出的水印                                           |
 | ------------ | ------------------------------------------------------------ | ------------------------------------------------------ |
-| 模糊         | ![blur_lena.png](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/output/attack/blur_lena.png) | ![blur_wm.png](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/extract/blur_wm.png) |
-| 用图像覆盖   | ![cover_lena.png](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/output/attack/cover_lena.png) | ![](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/extract/cover_wm.png)           |
-| 用线条覆盖   | ![randline_lena.png](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/output/attack/randline_lena.png) | ![](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/extract/randline_wm.png)        |
-| 亮度调高10%  | ![brighter10_lena.png](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/output/attack/brighter10_lena.png) | ![](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/extract/brighter10_wm.png)      |
-| 亮度调低10%  | ![darker10_lena.png](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/output/attack/darker10_lena.png) | ![](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/extract/darker10_wm.png)        |
-| 添加椒盐噪声 | ![saltnoise_lena.png](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/output/attack/saltnoise_lena.png) | ![](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/extract/saltnoise_wm.png)       |
-| 裁剪5%并填充 | ![](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/output/attack/chop5_lena.png)         | ![](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/extract/chop5_wm.png)           |
-| 裁剪10%      | ![](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/output/attack/chop10_lena.png)        | ![](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/extract/chop10_wm.png)          |
-| 裁剪30%      | ![](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/output/attack/chop30_lena.png)        | ![](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/extract/chop30_wm.png)          |
+| 模糊         | ![blur_lena.png](./pics_for_show/grey/output/attack/blur_lena.png) | ![blur_wm.png](./pics_for_show/grey/extract/blur_wm.png) |
+| 用图像覆盖   | ![cover_lena.png](./pics_for_show/grey/output/attack/cover_lena.png) | ![](./pics_for_show/grey/extract/cover_wm.png)           |
+| 用线条覆盖   | ![randline_lena.png](./pics_for_show/grey/output/attack/randline_lena.png) | ![](./pics_for_show/grey/extract/randline_wm.png)        |
+| 亮度调高10%  | ![brighter10_lena.png](./pics_for_show/grey/output/attack/brighter10_lena.png) | ![](./pics_for_show/grey/extract/brighter10_wm.png)      |
+| 亮度调低10%  | ![darker10_lena.png](./pics_for_show/grey/output/attack/darker10_lena.png) | ![](./pics_for_show/grey/extract/darker10_wm.png)        |
+| 添加椒盐噪声 | ![saltnoise_lena.png](./pics_for_show/grey/output/attack/saltnoise_lena.png) | ![](./pics_for_show/grey/extract/saltnoise_wm.png)       |
+| 裁剪5%并填充 | ![](./pics_for_show/grey/output/attack/chop5_lena.png)         | ![](./pics_for_show/grey/extract/chop5_wm.png)           |
+| 裁剪10%      | ![](./pics_for_show/grey/output/attack/chop10_lena.png)        | ![](./pics_for_show/grey/extract/chop10_wm.png)          |
+| 裁剪30%      | ![](./pics_for_show/grey/output/attack/chop30_lena.png)        | ![](./pics_for_show/grey/extract/chop30_wm.png)          |
 
 #### 针对jpeg压缩, 经检验单独对Y通道解水印效果最好,以下解出的水印均来自Y通道
 
 | 压缩因子 | 压缩后的图片                                           | 提取出的水印                                          |
 | -------- | ------------------------------------------------------ | ----------------------------------------------------- |
-| 90       | ![](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/output/attack/jpeg_90_lena.jpg) | ![](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/extract/Y_U_V/Yjpeg_90_wm.png) |
-| 85       | ![](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/output/attack/jpeg_85_lena.jpg) | ![](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/extract/Y_U_V/Yjpeg_85_wm.png) |
-| 80       | ![](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/output/attack/jpeg_80_lena.jpg) | ![](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/extract/Y_U_V/Yjpeg_80_wm.png) |
-| 70       | ![](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/output/attack/jpeg_70_lena.jpg) | ![](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/extract/Y_U_V/Yjpeg_70_wm.png) |
-| 60       | ![](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/output/attack/jpeg_60_lena.jpg) | ![](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/extract/Y_U_V/Yjpeg_60_wm.png) |
-| 50       | ![](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/output/attack/jpeg_50_lena.jpg) | ![](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/extract/Y_U_V/Yjpeg_50_wm.png) |
-| 40       | ![](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/output/attack/jpeg_40_lena.jpg) | ![](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/extract/Y_U_V/Yjpeg_40_wm.png) |
+| 90       | ![](./pics_for_show/grey/output/attack/jpeg_90_lena.jpg) | ![](./pics_for_show/grey/extract/Y_U_V/Yjpeg_90_wm.png) |
+| 85       | ![](./pics_for_show/grey/output/attack/jpeg_85_lena.jpg) | ![](./pics_for_show/grey/extract/Y_U_V/Yjpeg_85_wm.png) |
+| 80       | ![](./pics_for_show/grey/output/attack/jpeg_80_lena.jpg) | ![](./pics_for_show/grey/extract/Y_U_V/Yjpeg_80_wm.png) |
+| 70       | ![](./pics_for_show/grey/output/attack/jpeg_70_lena.jpg) | ![](./pics_for_show/grey/extract/Y_U_V/Yjpeg_70_wm.png) |
+| 60       | ![](./pics_for_show/grey/output/attack/jpeg_60_lena.jpg) | ![](./pics_for_show/grey/extract/Y_U_V/Yjpeg_60_wm.png) |
+| 50       | ![](./pics_for_show/grey/output/attack/jpeg_50_lena.jpg) | ![](./pics_for_show/grey/extract/Y_U_V/Yjpeg_50_wm.png) |
+| 40       | ![](./pics_for_show/grey/output/attack/jpeg_40_lena.jpg) | ![](./pics_for_show/grey/extract/Y_U_V/Yjpeg_40_wm.png) |
 
 #### 水印防破解
 
@@ -68,8 +68,8 @@ bwm1.extract("out.png","out_wm.png")
 
 | 介绍                                                      | 图片                                        | 提取出的水印                                     |
 | --------------------------------------------------------- | ------------------------------------------- | ------------------------------------------------ |
-| 我们嵌入水印的图片A                                       | ![](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/anti-crack/out.png)  | ![](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/anti-crack/out_wm.png)    |
-| 破解者在上面这种我们已经嵌入水印的图中再次嵌入水印的图片B | ![](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/anti-crack/out2.png) | ![](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/anti-crack/out_wm2.png)   |
-| 用我们的参数提取破解者的图片B                             |                                             | ![](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/anti-crack/bwm1_out2.png) |
-| 用破解者的参数提取我们的图片A                             |                                             | ![](https://github.com/fire-keeper/BlindWatermark/blob/master/pics for show/grey/anti-crack/bwm2_out.png)  |
+| 我们嵌入水印的图片A                                       | ![](./pics_for_show/grey/anti-crack/out.png)  | ![](./pics_for_show/grey/anti-crack/out_wm.png)    |
+| 破解者在上面这种我们已经嵌入水印的图中再次嵌入水印的图片B | ![](./pics_for_show/grey/anti-crack/out2.png) | ![](./pics_for_show/grey/anti-crack/out_wm2.png)   |
+| 用我们的参数提取破解者的图片B                             |                                             | ![](./pics_for_show/grey/anti-crack/bwm1_out2.png) |
+| 用破解者的参数提取我们的图片A                             |                                             | ![](./pics_for_show/grey/anti-crack/bwm2_out.png)  |
 
