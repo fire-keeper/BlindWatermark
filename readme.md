@@ -1,15 +1,44 @@
 # 盲水印
 
+## 适用情况
+
+- 适用人群: 希望保护自己创作的图片的创作者
+- 图片要求: 仅要求图片的长和宽均是偶数, 对彩色和黑白没有要求
+- 水印要求: 
+
+  - 只能嵌入二值化的信息, 会自动取水印的B通道并二值化嵌入,水印最好是黑白的图片
+  - 要求水印的长×宽 <= 图片的长/2/4 ×  图片的宽/2/4  , 程序会自动验证
+
+- 程序依赖:
+  - python3
+  - numpy
+  - opencv
+  - scipy
+  - PyWavelets
+
 ## 如何使用
 
 ```
 # python代码
+#导入模块
+from BlindWatermark import watermark
+```
+
+```
+#嵌入
+
 bwm1 = watermark(4399,2333,36,20)
 #4399和2333是两个随机种子,36和20是用于嵌入算法的除数,理论上第一个除数要大于第二个,除数越大鲁棒性越强,但是除数越大,输出图片的失真越大,需要权衡后决定
 bwm1.read_ori_img("pic/lena_grey.png")
 bwm1.read_wm("pic/wm.png")
 bwm1.embed('out.png')
-bwm1.extract("out.png","out_wm.png")
+```
+
+```
+#提取
+bwm1 = watermark(4399,2333,36,20,wm_shape=(64,64))
+bwm1.extract("out.png","out_wm.png")   
+#注意需要在输出的水印的同级目录下创建 Y_U_V/ 文件夹, 否则单通道提取出来的水印不会被保存
 ```
 
 
