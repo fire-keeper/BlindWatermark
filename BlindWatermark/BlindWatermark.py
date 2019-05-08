@@ -81,7 +81,8 @@ class watermark():
         s[0] = (max_s-max_s%self.mod+3/4*self.mod) if wm_1>=128 else (max_s-max_s%self.mod+1/4*self.mod)
         if self.mod2:
             max_s = s[1]
-            s[1] = (max_s-max_s%self.mod2+3/4*self.mod2) if wm_1>=128 else (max_s-max_s%self.mod2+1/4*self.mod2)
+            # s[1] = (max_s-max_s%self.mod2+3/4*self.mod2) if wm_1>=128 else (max_s-max_s%self.mod2+1/4*self.mod2)
+            s[1] = (max_s-max_s%self.mod2+3/4*self.mod2) if wm_1<128 else (max_s-max_s%self.mod2+1/4*self.mod2)
 
         ###np.dot(U[:, :k], np.dot(np.diag(sigma[:k]),v[:k, :]))
         block_dct_shuffled = np.dot(U,np.dot(np.diag(s),V))
@@ -253,7 +254,12 @@ class watermark():
         cv2.imwrite(os.path.join(path,'Y_U_V','U'+file_name),extract_wm_U.reshape(64,64))
         cv2.imwrite(os.path.join(path,'Y_U_V','V'+file_name),extract_wm_V.reshape(64,64))
 
-
+from NCC import NCC
+def test_ncc(filename1,filename2):
+    a = cv2.imread(filename1)
+    b = cv2.imread(filename2)
+    for i in range(3):
+        print(NCC(a[:,:,i],b[:,:,i]))   
 
 if __name__=="__main__":
     bwm1 = watermark(4399,2333,36,20)
@@ -263,6 +269,7 @@ if __name__=="__main__":
     bwm1.embed('out.png')
     bwm1.extract("out.png","./out_wm.png")
 
+    test_ncc('pic/lena_grey.png','out.png')
 
     # bwm2 = watermark(7373,1024,22,12)
     # bwm2.read_ori_img('out.png')
