@@ -1,4 +1,5 @@
 import numpy as np
+import cv2
 
 def NCC(A,B):
     cross_mul_sum=((A-A.mean())*(B-B.mean())).sum()
