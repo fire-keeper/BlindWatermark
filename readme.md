@@ -56,7 +56,25 @@
 
 ## 如何使用
 
-使用`git pull https://github.com/fire-keeper/BlindWatermark.git`或者直接下载压缩包把项目拉到本地, 然后在项目目录下运行一下python命令
+使用`git pull https://github.com/fire-keeper/BlindWatermark.git`或者直接下载压缩包把项目拉到本地, 然后在项目目录下
+
+**命令行版**
+
+```
+#嵌入
+python bwm.py -k 4399 2333 32 -em -r pic/lena_grey.png -wm pic/wm.png -o out.png -s
+```
+
+```
+#提取
+python bwm.py -k 4399 2333 32 -ex -r out.png -wm pic/wm.png -ws 64 64 -o out_wm.png -s
+```
+
+
+
+
+
+**运行以下python命令**
 
 ```
 # python代码
