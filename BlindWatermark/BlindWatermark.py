@@ -254,12 +254,6 @@ class watermark():
         cv2.imwrite(os.path.join(path,'Y_U_V','U'+file_name),extract_wm_U.reshape(64,64))
         cv2.imwrite(os.path.join(path,'Y_U_V','V'+file_name),extract_wm_V.reshape(64,64))
 
-from NCC import NCC
-def test_ncc(filename1,filename2):
-    a = cv2.imread(filename1)
-    b = cv2.imread(filename2)
-    for i in range(3):
-        print(NCC(a[:,:,i],b[:,:,i]))   
 
 if __name__=="__main__":
     bwm1 = watermark(4399,2333,36,20)
@@ -269,7 +263,6 @@ if __name__=="__main__":
     bwm1.embed('out.png')
     bwm1.extract("out.png","./out_wm.png")
 
-    test_ncc('pic/lena_grey.png','out.png')
 
     # bwm2 = watermark(7373,1024,22,12)
     # bwm2.read_ori_img('out.png')

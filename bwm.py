@@ -1,6 +1,6 @@
 import argparse
 from BlindWatermark_mod import watermark
-from ncc import test_ncc
+from BlindWatermark import test_ncc
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser(usage="嵌入或者解出盲水印.", description="help info.")

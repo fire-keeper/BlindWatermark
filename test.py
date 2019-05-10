@@ -20,17 +20,17 @@ def attack(fname,type):
                 
     if type=="chop10":
         w,h = img.shape[:2]
-        img[int(w*(1-0.1))+1:,:]=img[:int(w*0.1),:]
+        img[w-int(w*0.1):,:]=img[:int(w*0.1),:]
         return img
     
     if type=="chop5":
         w,h = img.shape[:2]
-        img[int(w*(1-0.05))+1:,:]=img[:int(w*0.05),:]
+        img[w-int(w*0.05):,:]=img[:int(w*0.05),:]
         return img
 
     if type=="chop30":
         w,h = img.shape[:2]
-        img[int(w*(1-0.3))+1:,:]=img[:int(w*0.3),:]
+        img[w-int(w*0.3):,:]=img[:int(w*0.3),:]
         return img
         
     if type == "gray":
