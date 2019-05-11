@@ -38,6 +38,10 @@ class watermark():
             self.ori_img_YUV = ori_img
         elif self.color_mod == 'YUV':
             self.ori_img_YUV = cv2.cvtColor(ori_img, cv2.COLOR_BGR2YUV)
+            
+        a = None if self.ori_img_YUV.shape[0]%2==0 else -1
+        b = None if self.ori_img_YUV.shape[1]%2==0 else -1
+        self.ori_img_YUV = self.ori_img_YUV[:a,:b]
         assert self.ori_img_YUV.shape[0]%2==0
         assert self.ori_img_YUV.shape[1]%2==0
 

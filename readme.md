@@ -19,6 +19,7 @@
 
 - [ ] 支持多级离散小波变换
 - [ ] 支持自动补以去除图片长宽需要是偶数的限制
+  - 临时解决了长宽不为偶数的情况, 长宽为奇数时直接舍弃一行或一列像素来使长宽变为偶数, 这时请不要使用`-s`因为输出图的形状与原图会不匹配,会报错,但是图片还是能输出,只是不能输出相似度而已
 - [ ] 打包并上传pypi , 占时还不考虑,等较完善了再打包上传
 - [x] 添加命令行模式
 - [ ] 添加更多的嵌入方式(0/n)
@@ -55,8 +56,6 @@
   - PyWavelets
 
 ## 如何使用
-
-<iframe src="//player.bilibili.com/player.html?aid=52047712&page=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"> </iframe>
 
 [B站视频链接](https://www.bilibili.com/video/av52047712/)
 
