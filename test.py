@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from BlindWatermark8 import watermark
+from BlindWatermark import watermark
 
 def attack(fname,type):
     img = cv2.imread(fname)    
@@ -128,30 +128,30 @@ def attack(fname,type):
 
 attack_dic ={}
 # attack_dic['ori']          = '原图'
-# attack_dic['blur']         = '模糊'
+attack_dic['blur']         = '模糊'
 # #attack_dic['rotate180']    ='旋转180度'
 # #attack_dic['rotate90']     = '旋转90度'
 # attack_dic['chop5']        = '剪切掉5%'
 # attack_dic['chop10']       = '剪切掉10%'
-# attack_dic['chop30']       = '剪切掉30%'
-# attack_dic['saltnoise']    ='椒盐噪声'
+attack_dic['chop30']       = '剪切掉30%'
+attack_dic['saltnoise']    ='椒盐噪声'
 # # attack_dic['vwm']          = '增加明水印'
-# attack_dic['randline']     = '随机画线'
-# attack_dic['cover']        = '随机遮挡'
+attack_dic['randline']     = '随机画线'
+attack_dic['cover']        = '随机遮挡'
 # attack_dic['brighter10']   = '亮度提高10%'
 # attack_dic['darker10']     = '亮度降低10%'
 # #attack_dic['largersize']   = '图像拉伸'
 # #attack_dic['smallersize']  = '图像缩小'
 # #attack_dic['gray']         ='自然灰度处理'
 # #attack_dic['redgray']      ='红色灰度处理'
-attack_dic['jpeg_90']     = 'jepg压缩,压缩率90'
-attack_dic['jpeg_85']     = 'jepg压缩,压缩率85'
-attack_dic['jpeg_80']     = 'jepg压缩,压缩率80'
-attack_dic['jpeg_70']     = 'jepg压缩,压缩率70'
-attack_dic['jpeg_60']     = 'jepg压缩,压缩率60'
-attack_dic['jpeg_50']     = 'jepg压缩,压缩率50'
-attack_dic['jpeg_40']     = 'jepg压缩,压缩率40'
-attack_dic['jpeg_30']     = 'jepg压缩,压缩率30'
+#attack_dic['jpeg_90']     = 'jepg压缩,压缩率90'
+#attack_dic['jpeg_85']     = 'jepg压缩,压缩率85'
+#attack_dic['jpeg_80']     = 'jepg压缩,压缩率80'
+#attack_dic['jpeg_70']     = 'jepg压缩,压缩率70'
+#attack_dic['jpeg_60']     = 'jepg压缩,压缩率60'
+#attack_dic['jpeg_50']     = 'jepg压缩,压缩率50'
+#attack_dic['jpeg_40']     = 'jepg压缩,压缩率40'
+#attack_dic['jpeg_30']     = 'jepg压缩,压缩率30'
 
 
 if __name__ == "__main__":

@@ -6,14 +6,16 @@ import os
 
 
 class watermark():
-    def __init__(self,random_seed_wm,random_seed_dct,mod,mod2=None,wm_shape=None):
+    def __init__(self,random_seed_wm,random_seed_dct,mod,mod2=None,wm_shape=None,block_shape = (4,4),color_mod = 'YUV',dwt_deep=1):
         # self.wm_per_block = 1
-        self.block_shape = (4,4)  #2^n
+        self.block_shape = block_shape  #2^n
         self.random_seed_wm = random_seed_wm
         self.random_seed_dct = random_seed_dct
         self.mod = mod
         self.mod2 = mod2
         self.wm_shape = wm_shape
+        self.color_mod = color_mod
+        self.dwt_deep = dwt_deep
 
 
     def init_block_add_index(self,img_shape):
@@ -32,10 +34,15 @@ class watermark():
 
     def read_ori_img(self,filename):
         ori_img = cv2.imread(filename)
-        # self.ori_img_YUV = ori_img
-        self.ori_img_YUV = cv2.cvtColor(ori_img, cv2.COLOR_BGR2YUV)
+        if self.color_mod == 'RGB':
+            self.ori_img_YUV = ori_img
+        elif self.color_mod == 'YUV':
+            self.ori_img_YUV = cv2.cvtColor(ori_img, cv2.COLOR_BGR2YUV)
         assert self.ori_img_YUV.shape[0]%2==0
         assert self.ori_img_YUV.shape[1]%2==0
+
+        # self.coeffs_Y = dwt2(self.ori_img_YUV[:,:,0],'haar')
+
 
         self.coeffs_Y = dwt2(self.ori_img_YUV[:,:,0],'haar')
         self.ha_Y = self.coeffs_Y[0]
@@ -81,8 +88,8 @@ class watermark():
         s[0] = (max_s-max_s%self.mod+3/4*self.mod) if wm_1>=128 else (max_s-max_s%self.mod+1/4*self.mod)
         if self.mod2:
             max_s = s[1]
-            # s[1] = (max_s-max_s%self.mod2+3/4*self.mod2) if wm_1>=128 else (max_s-max_s%self.mod2+1/4*self.mod2)
-            s[1] = (max_s-max_s%self.mod2+3/4*self.mod2) if wm_1<128 else (max_s-max_s%self.mod2+1/4*self.mod2)
+            s[1] = (max_s-max_s%self.mod2+3/4*self.mod2) if wm_1>=128 else (max_s-max_s%self.mod2+1/4*self.mod2)
+            # s[1] = (max_s-max_s%self.mod2+3/4*self.mod2) if wm_1<128 else (max_s-max_s%self.mod2+1/4*self.mod2)
 
         ###np.dot(U[:, :k], np.dot(np.diag(sigma[:k]),v[:k, :]))
         block_dct_shuffled = np.dot(U,np.dot(np.diag(s),V))
@@ -145,9 +152,13 @@ class watermark():
         self.embed_img_YUV[:,:,1] = self.embed_img_U
         self.embed_img_YUV[:,:,2] = self.embed_img_V
         # self.embed_img_YUV = np.concatenate((self.embed_img_Y[:,:,np.newaxis],self.embed_img_U[:,:,np.newaxis],self.embed_img_V[:,:,np.newaxis]),-1)   #-1或者2
+        self.embed_img_YUV[self.embed_img_YUV>255]=255
+        self.embed_img_YUV[self.embed_img_YUV<0]  =0
 
-        self.embed_img = cv2.cvtColor(self.embed_img_YUV,cv2.COLOR_YUV2BGR)
-        # self.embed_img = self.embed_img_YUV
+        if self.color_mod == 'RGB':
+            self.embed_img = self.embed_img_YUV
+        elif self.color_mod == 'YUV':
+            self.embed_img = cv2.cvtColor(self.embed_img_YUV,cv2.COLOR_YUV2BGR)
         cv2.imwrite(filename,self.embed_img)
 
     def block_get_wm(self,block,index):
@@ -176,9 +187,10 @@ class watermark():
         embed_img = cv2.imread(filename)
 
 
-
-        # embed_img_YUV = embed_img
-        embed_img_YUV = cv2.cvtColor(embed_img, cv2.COLOR_BGR2YUV)
+        if self.color_mod == 'RGB':
+            embed_img_YUV = embed_img
+        elif self.color_mod == 'YUV':
+            embed_img_YUV = cv2.cvtColor(embed_img, cv2.COLOR_BGR2YUV)
         assert embed_img_YUV.shape[0]%2==0
         assert embed_img_YUV.shape[1]%2==0
 

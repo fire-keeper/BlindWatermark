@@ -1,5 +1,5 @@
 import argparse
-from BlindWatermark_mod import watermark
+from BlindWatermark import watermark
 from BlindWatermark import test_ncc
 
 if __name__=='__main__':
