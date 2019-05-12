@@ -6,7 +6,7 @@ import os
 
 
 class watermark():
-    def __init__(self,random_seed_wm,random_seed_dct,mod,mod2=None,wm_shape=None,block_shape = (4,4),color_mod = 'YUV',dwt_deep=1):
+    def __init__(self,random_seed_wm,random_seed_dct,mod,mod2=None,wm_shape=None,block_shape=(4,4),color_mod = 'YUV',dwt_deep=1):
         # self.wm_per_block = 1
         self.block_shape = block_shape  #2^n
         self.random_seed_wm = random_seed_wm
@@ -16,6 +16,7 @@ class watermark():
         self.wm_shape = wm_shape
         self.color_mod = color_mod
         self.dwt_deep = dwt_deep
+
 
 
     def init_block_add_index(self,img_shape):
@@ -33,28 +34,58 @@ class watermark():
         
 
     def read_ori_img(self,filename):
-        ori_img = cv2.imread(filename)
+        #傻逼opencv因为数组类型不会变,输入是uint8输出也是uint8,而UV可以是负数且uint8会去掉小数部分
+        ori_img = cv2.imread(filename).astype(np.float32)
+        self.ori_img_shape = ori_img.shape[:2]
         if self.color_mod == 'RGB':
             self.ori_img_YUV = ori_img
         elif self.color_mod == 'YUV':
             self.ori_img_YUV = cv2.cvtColor(ori_img, cv2.COLOR_BGR2YUV)
-            
-        a = None if self.ori_img_YUV.shape[0]%2==0 else -1
-        b = None if self.ori_img_YUV.shape[1]%2==0 else -1
-        self.ori_img_YUV = self.ori_img_YUV[:a,:b]
-        assert self.ori_img_YUV.shape[0]%2==0
-        assert self.ori_img_YUV.shape[1]%2==0
 
-        # self.coeffs_Y = dwt2(self.ori_img_YUV[:,:,0],'haar')
+        if not self.ori_img_YUV.shape[0]%(2**self.dwt_deep)==0:
+            temp = (2**self.dwt_deep)-self.ori_img_YUV.shape[0]%(2**self.dwt_deep)
+            self.ori_img_YUV = np.concatenate((self.ori_img_YUV,np.zeros((temp,self.ori_img_YUV.shape[1],3))),axis=0)
+        if not self.ori_img_YUV.shape[1]%(2**self.dwt_deep)==0:
+            temp = (2**self.dwt_deep)-self.ori_img_YUV.shape[1]%(2**self.dwt_deep)
+            self.ori_img_YUV = np.concatenate((self.ori_img_YUV,np.zeros((self.ori_img_YUV.shape[0],temp,3))),axis=1)
+        assert self.ori_img_YUV.shape[0]%(2**self.dwt_deep)==0
+        assert self.ori_img_YUV.shape[1]%(2**self.dwt_deep)==0
 
+        if self.dwt_deep==1:
+            coeffs_Y = dwt2(self.ori_img_YUV[:,:,0],'haar')
+            ha_Y = coeffs_Y[0]
+            coeffs_U = dwt2(self.ori_img_YUV[:,:,1],'haar')
+            ha_U = coeffs_U[0]
+            coeffs_V = dwt2(self.ori_img_YUV[:,:,2],'haar')
+            ha_V = coeffs_V[0]
+            self.coeffs_Y = [coeffs_Y[1]]
+            self.coeffs_U = [coeffs_U[1]]
+            self.coeffs_V = [coeffs_V[1]]
 
-        self.coeffs_Y = dwt2(self.ori_img_YUV[:,:,0],'haar')
-        self.ha_Y = self.coeffs_Y[0]
-        self.coeffs_U = dwt2(self.ori_img_YUV[:,:,1],'haar')
-        self.ha_U = self.coeffs_U[0]
-        self.coeffs_V = dwt2(self.ori_img_YUV[:,:,2],'haar')
-        self.ha_V = self.coeffs_V[0]
-
+        elif self.dwt_deep>=2:
+            #不希望使用太多级的dwt,2,3次就行了
+            coeffs_Y = dwt2(self.ori_img_YUV[:,:,0],'haar')
+            ha_Y = coeffs_Y[0]
+            coeffs_U = dwt2(self.ori_img_YUV[:,:,1],'haar')
+            ha_U = coeffs_U[0]
+            coeffs_V = dwt2(self.ori_img_YUV[:,:,2],'haar')
+            ha_V = coeffs_V[0]
+            self.coeffs_Y = [coeffs_Y[1]]
+            self.coeffs_U = [coeffs_U[1]]
+            self.coeffs_V = [coeffs_V[1]]
+            for i in range(self.dwt_deep-1):
+                coeffs_Y = dwt2(ha_Y,'haar')
+                ha_Y = coeffs_Y[0]
+                coeffs_U = dwt2(ha_U,'haar')
+                ha_U = coeffs_U[0]
+                coeffs_V = dwt2(ha_V,'haar')
+                ha_V = coeffs_V[0]
+                self.coeffs_Y.append(coeffs_Y[1])
+                self.coeffs_U.append(coeffs_U[1])
+                self.coeffs_V.append(coeffs_V[1])
+        self.ha_Y = ha_Y
+        self.ha_U = ha_U
+        self.ha_V = ha_V
 
         self.ha_block_shape = (int(self.ha_Y.shape[0]/self.block_shape[0]),int(self.ha_Y.shape[1]/self.block_shape[1]),self.block_shape[0],self.block_shape[1])
         strides = self.ha_Y.itemsize*(np.array([self.ha_Y.shape[1]*self.block_shape[0],self.block_shape[1],self.ha_Y.shape[1],1]))
@@ -77,6 +108,7 @@ class watermark():
             self.random_wm = np.random.RandomState(self.random_seed_wm)
             self.random_wm.shuffle(self.wm_flatten)
 
+
     def block_add_wm(self,block,index,i):
         
         i = i%(self.wm_shape[0]*self.wm_shape[1])
@@ -93,7 +125,7 @@ class watermark():
         if self.mod2:
             max_s = s[1]
             s[1] = (max_s-max_s%self.mod2+3/4*self.mod2) if wm_1>=128 else (max_s-max_s%self.mod2+1/4*self.mod2)
-            # s[1] = (max_s-max_s%self.mod2+3/4*self.mod2) if wm_1<128 else (max_s-max_s%self.mod2+1/4*self.mod2)
+        # s[1] = (max_s-max_s%self.mod2+3/4*self.mod2) if wm_1<128 else (max_s-max_s%self.mod2+1/4*self.mod2)
 
         ###np.dot(U[:, :k], np.dot(np.diag(sigma[:k]),v[:k, :]))
         block_dct_shuffled = np.dot(U,np.dot(np.diag(s),V))
@@ -109,9 +141,9 @@ class watermark():
 
     def embed(self,filename):
 
-        self.embed_ha_Y_block=self.ha_Y_block.copy()
-        self.embed_ha_U_block=self.ha_U_block.copy()
-        self.embed_ha_V_block=self.ha_V_block.copy()
+        embed_ha_Y_block=self.ha_Y_block.copy()
+        embed_ha_U_block=self.ha_U_block.copy()
+        embed_ha_V_block=self.ha_V_block.copy()
 
         self.random_dct = np.random.RandomState(self.random_seed_dct)
         index = np.arange(self.block_shape[0]*self.block_shape[1])
@@ -119,51 +151,52 @@ class watermark():
         for i in range(self.length):
 
             self.random_dct.shuffle(index)
-            self.embed_ha_Y_block[self.block_add_index0[i],self.block_add_index1[i]] = self.block_add_wm(self.embed_ha_Y_block[self.block_add_index0[i],self.block_add_index1[i]],index,i)
-            self.embed_ha_U_block[self.block_add_index0[i],self.block_add_index1[i]] = self.block_add_wm(self.embed_ha_U_block[self.block_add_index0[i],self.block_add_index1[i]],index,i)
-            self.embed_ha_V_block[self.block_add_index0[i],self.block_add_index1[i]] = self.block_add_wm(self.embed_ha_V_block[self.block_add_index0[i],self.block_add_index1[i]],index,i)
+            embed_ha_Y_block[self.block_add_index0[i],self.block_add_index1[i]] = self.block_add_wm(embed_ha_Y_block[self.block_add_index0[i],self.block_add_index1[i]],index,i)
+            embed_ha_U_block[self.block_add_index0[i],self.block_add_index1[i]] = self.block_add_wm(embed_ha_U_block[self.block_add_index0[i],self.block_add_index1[i]],index,i)
+            embed_ha_V_block[self.block_add_index0[i],self.block_add_index1[i]] = self.block_add_wm(embed_ha_V_block[self.block_add_index0[i],self.block_add_index1[i]],index,i)
 
         
         
-        self.embed_ha_Y_part = np.concatenate(self.embed_ha_Y_block,1)
-        self.embed_ha_Y_part = np.concatenate(self.embed_ha_Y_part,1)
-        self.embed_ha_U_part = np.concatenate(self.embed_ha_U_block,1)
-        self.embed_ha_U_part = np.concatenate(self.embed_ha_U_part,1)
-        self.embed_ha_V_part = np.concatenate(self.embed_ha_V_block,1)
-        self.embed_ha_V_part = np.concatenate(self.embed_ha_V_part,1)
+        embed_ha_Y_part = np.concatenate(embed_ha_Y_block,1)
+        embed_ha_Y_part = np.concatenate(embed_ha_Y_part,1)
+        embed_ha_U_part = np.concatenate(embed_ha_U_block,1)
+        embed_ha_U_part = np.concatenate(embed_ha_U_part,1)
+        embed_ha_V_part = np.concatenate(embed_ha_V_block,1)
+        embed_ha_V_part = np.concatenate(embed_ha_V_part,1)
 
-        self.embed_ha_Y = self.ha_Y.copy()
-        self.embed_ha_Y[:self.part_shape[0],:self.part_shape[1]] = self.embed_ha_Y_part
-        self.embed_ha_U = self.ha_U.copy()
-        self.embed_ha_U[:self.part_shape[0],:self.part_shape[1]] = self.embed_ha_U_part
-        self.embed_ha_V = self.ha_V.copy()
-        self.embed_ha_V[:self.part_shape[0],:self.part_shape[1]] = self.embed_ha_V_part
-
-
-        _, (cH, cV, cD) = self.coeffs_Y
-        self.embed_coeffs_Y = (self.embed_ha_Y, (cH, cV, cD))
-        _, (cH, cV, cD) = self.coeffs_U
-        self.embed_coeffs_U = (self.embed_ha_U, (cH, cV, cD))
-        _, (cH, cV, cD) = self.coeffs_V
-        self.embed_coeffs_V = (self.embed_ha_V, (cH, cV, cD))
+        embed_ha_Y = self.ha_Y.copy()
+        embed_ha_Y[:self.part_shape[0],:self.part_shape[1]] = embed_ha_Y_part
+        embed_ha_U = self.ha_U.copy()
+        embed_ha_U[:self.part_shape[0],:self.part_shape[1]] = embed_ha_U_part
+        embed_ha_V = self.ha_V.copy()
+        embed_ha_V[:self.part_shape[0],:self.part_shape[1]] = embed_ha_V_part
 
 
-        self.embed_img_Y = idwt2(self.embed_coeffs_Y,"haar")
-        self.embed_img_U = idwt2(self.embed_coeffs_U,"haar")
-        self.embed_img_V = idwt2(self.embed_coeffs_V,"haar")
-        self.embed_img_YUV = self.ori_img_YUV.copy()
-        self.embed_img_YUV[:,:,0] = self.embed_img_Y
-        self.embed_img_YUV[:,:,1] = self.embed_img_U
-        self.embed_img_YUV[:,:,2] = self.embed_img_V
-        # self.embed_img_YUV = np.concatenate((self.embed_img_Y[:,:,np.newaxis],self.embed_img_U[:,:,np.newaxis],self.embed_img_V[:,:,np.newaxis]),-1)   #-1或者2
-        self.embed_img_YUV[self.embed_img_YUV>255]=255
-        self.embed_img_YUV[self.embed_img_YUV<0]  =0
+        for i in range(self.dwt_deep):
+            (cH, cV, cD) = self.coeffs_Y[-1*(i+1)]
+            embed_ha_Y = idwt2((embed_ha_Y.copy(), (cH, cV, cD)),"haar") #其idwt得到父级的ha
+            (cH, cV, cD) = self.coeffs_U[-1*(i+1)]
+            embed_ha_U = idwt2((embed_ha_U.copy(), (cH, cV, cD)),"haar") #其idwt得到父级的ha
+            (cH, cV, cD) = self.coeffs_V[-1*(i+1)]
+            embed_ha_V = idwt2((embed_ha_V.copy(), (cH, cV, cD)),"haar") #其idwt得到父级的ha
+            #最上级的ha就是嵌入水印的图,即for运行完的ha
 
+
+        embed_img_YUV = np.zeros(self.ori_img_YUV.shape,dtype=np.float32)
+        embed_img_YUV[:,:,0] = embed_ha_Y
+        embed_img_YUV[:,:,1] = embed_ha_U
+        embed_img_YUV[:,:,2] = embed_ha_V
+
+        embed_img_YUV=embed_img_YUV[:self.ori_img_shape[0],:self.ori_img_shape[1]]
         if self.color_mod == 'RGB':
-            self.embed_img = self.embed_img_YUV
+            embed_img = embed_img_YUV
         elif self.color_mod == 'YUV':
-            self.embed_img = cv2.cvtColor(self.embed_img_YUV,cv2.COLOR_YUV2BGR)
-        cv2.imwrite(filename,self.embed_img)
+            embed_img = cv2.cvtColor(embed_img_YUV,cv2.COLOR_YUV2BGR)
+
+        embed_img[embed_img>255]=255
+        embed_img[embed_img<0]=0
+
+        cv2.imwrite(filename,embed_img)
 
     def block_get_wm(self,block,index):
         block_dct = dctn(block,norm='ortho')
@@ -188,15 +221,21 @@ class watermark():
             return 0
         
         #读取图片
-        embed_img = cv2.imread(filename)
-
-
+        embed_img = cv2.imread(filename).astype(np.float32)
         if self.color_mod == 'RGB':
             embed_img_YUV = embed_img
         elif self.color_mod == 'YUV':
             embed_img_YUV = cv2.cvtColor(embed_img, cv2.COLOR_BGR2YUV)
-        assert embed_img_YUV.shape[0]%2==0
-        assert embed_img_YUV.shape[1]%2==0
+
+        if not embed_img_YUV.shape[0]%(2**self.dwt_deep)==0:
+            temp = (2**self.dwt_deep)-embed_img_YUV.shape[0]%(2**self.dwt_deep)
+            embed_img_YUV = np.concatenate((embed_img_YUV,np.zeros((temp,embed_img_YUV.shape[1],3))),axis=0)
+        if not embed_img_YUV.shape[1]%(2**self.dwt_deep)==0:
+            temp = (2**self.dwt_deep)-embed_img_YUV.shape[1]%(2**self.dwt_deep)
+            embed_img_YUV = np.concatenate((embed_img_YUV,np.zeros((embed_img_YUV.shape[0],temp,3))),axis=1)
+
+        assert embed_img_YUV.shape[0]%(2**self.dwt_deep)==0
+        assert embed_img_YUV.shape[1]%(2**self.dwt_deep)==0
 
         embed_img_Y = embed_img_YUV[:,:,0]
         embed_img_U = embed_img_YUV[:,:,1]
@@ -207,6 +246,15 @@ class watermark():
         ha_Y = coeffs_Y[0]
         ha_U = coeffs_U[0]
         ha_V = coeffs_V[0]
+        #对ha进一步进行小波变换,并把下一级ha保存到ha中
+        for i in range(self.dwt_deep-1):
+            coeffs_Y = dwt2(ha_Y,'haar')
+            ha_Y = coeffs_Y[0]
+            coeffs_U = dwt2(ha_U,'haar')
+            ha_U = coeffs_U[0]
+            coeffs_V = dwt2(ha_V,'haar')
+            ha_V = coeffs_V[0]
+        
         
         #初始化块索引数组
         try :
@@ -272,12 +320,11 @@ class watermark():
 
 
 if __name__=="__main__":
-    bwm1 = watermark(4399,2333,36,20)
+    bwm1 = watermark(4399,2333,32)
     bwm1.read_ori_img("pic/lena_grey.png")
-    # bwm1.read_ori_img("lena_extended.png")
     bwm1.read_wm("pic/wm.png")
     bwm1.embed('out.png')
-    bwm1.extract("out.png","./out_wm.png")
+    # bwm1.extract("out.png","./out_wm.png")
 
 
     # bwm2 = watermark(7373,1024,22,12)
