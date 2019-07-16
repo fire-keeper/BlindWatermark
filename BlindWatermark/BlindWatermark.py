@@ -121,10 +121,10 @@ class watermark():
         block_dct_shuffled = block_dct_flatten.reshape(self.block_shape)
         U,s,V = np.linalg.svd(block_dct_shuffled)
         max_s = s[0]
-        s[0] = (max_s-max_s%self.mod+3/4*self.mod) if wm_1>=128 else (max_s-max_s%self.mod+1/4*self.mod)
+        s[0] = (max_s-max_s%self.mod+3/4.*self.mod) if wm_1>=128 else (max_s-max_s%self.mod+1/4.*self.mod)
         if self.mod2:
             max_s = s[1]
-            s[1] = (max_s-max_s%self.mod2+3/4*self.mod2) if wm_1>=128 else (max_s-max_s%self.mod2+1/4*self.mod2)
+            s[1] = (max_s-max_s%self.mod2+3/4.*self.mod2) if wm_1>=128 else (max_s-max_s%self.mod2+1/4.*self.mod2)
         # s[1] = (max_s-max_s%self.mod2+3/4*self.mod2) if wm_1<128 else (max_s-max_s%self.mod2+1/4*self.mod2)
 
         ###np.dot(U[:, :k], np.dot(np.diag(sigma[:k]),v[:k, :]))
@@ -206,10 +206,10 @@ class watermark():
 
         U,s,V = np.linalg.svd(block_dct_shuffled)
         max_s = s[0]
-        wm_1 = 255 if max_s%self.mod >self.mod/2 else 0
+        wm_1 = 255 if max_s%self.mod >self.mod/2. else 0
         if self.mod2:
             max_s = s[1]
-            wm_2 = 255 if max_s%self.mod2 >self.mod2/2 else 0
+            wm_2 = 255 if max_s%self.mod2 >self.mod2/2. else 0
             wm = (wm_1*3+wm_2*1)/4
         else:
             wm = wm_1
