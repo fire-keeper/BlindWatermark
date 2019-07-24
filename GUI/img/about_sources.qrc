@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="pic">
+    <file>alipay.png</file>
+    <file>setu_qrcode.png</file>
+  </qresource>
+</RCC>

@@ -2,10 +2,14 @@ import numpy as np
 import cv2
 from pywt import dwt2,idwt2
 import os
+from PyQt5.QtCore import pyqtSignal, QThread
 
-
-class watermark():
-    def __init__(self,random_seed_wm,random_seed_dct,mod,mod2=None,wm_shape=None,block_shape=(4,4),color_mod = 'YUV',dwt_deep=1):
+class watermark(QThread):
+    #just for pyqt
+    valueChanged = pyqtSignal(int)
+    def __init__(self,random_seed_wm=None,random_seed_dct=None,mod=None,mod2=None,wm_shape=None,block_shape=(4,4),color_mod = 'YUV',dwt_deep=1):
+        #just for pyqt
+        QThread.__init__(self)
         # self.wm_per_block = 1
         self.block_shape = block_shape  #2^n
         self.random_seed_wm = random_seed_wm
@@ -15,7 +19,7 @@ class watermark():
         self.wm_shape = wm_shape
         self.color_mod = color_mod
         self.dwt_deep = dwt_deep
-
+        
 
 
     def init_block_add_index(self,img_shape):
@@ -138,7 +142,7 @@ class watermark():
 
 
 
-    def embed(self,filename):
+    def embed2array(self):
 
         embed_ha_Y_block=self.ha_Y_block.copy()
         embed_ha_U_block=self.ha_U_block.copy()
@@ -153,9 +157,13 @@ class watermark():
             embed_ha_Y_block[self.block_add_index0[i],self.block_add_index1[i]] = self.block_add_wm(embed_ha_Y_block[self.block_add_index0[i],self.block_add_index1[i]],index,i)
             embed_ha_U_block[self.block_add_index0[i],self.block_add_index1[i]] = self.block_add_wm(embed_ha_U_block[self.block_add_index0[i],self.block_add_index1[i]],index,i)
             embed_ha_V_block[self.block_add_index0[i],self.block_add_index1[i]] = self.block_add_wm(embed_ha_V_block[self.block_add_index0[i],self.block_add_index1[i]],index,i)
+            #just for pyqt progress bar
 
-        
-        
+            if i%int(self.length/100)==0:
+                self.valueChanged.emit(int(i/self.length*100))
+
+
+       
         embed_ha_Y_part = np.concatenate(embed_ha_Y_block,1)
         embed_ha_Y_part = np.concatenate(embed_ha_Y_part,1)
         embed_ha_U_part = np.concatenate(embed_ha_U_block,1)
@@ -179,7 +187,7 @@ class watermark():
             (cH, cV, cD) = self.coeffs_V[-1*(i+1)]
             embed_ha_V = idwt2((embed_ha_V.copy(), (cH, cV, cD)),"haar") #其idwt得到父级的ha
             #最上级的ha就是嵌入水印的图,即for运行完的ha
-
+        
 
         embed_img_YUV = np.zeros(self.ori_img_YUV.shape,dtype=np.float32)
         embed_img_YUV[:,:,0] = embed_ha_Y
@@ -195,7 +203,15 @@ class watermark():
         embed_img[embed_img>255]=255
         embed_img[embed_img<0]=0
 
-        cv2.imwrite(filename,embed_img)
+        #just for pyqt progress bar
+        self.valueChanged.emit(100)    #表征进程结束
+        return embed_img
+
+    def embed(self,filename,write=True):
+        self.embed_img = self.embed2array()
+        if write:
+            cv2.imwrite(filename,self.embed_img)
+
 
     def block_get_wm(self,block,index):
         block_dct = cv2.dct(block)
@@ -300,7 +316,8 @@ class watermark():
                 extract_wm_Y[ii] = (extract_wm_Y[ii]*times + wm_Y)/(times+1)
                 extract_wm_U[ii] = (extract_wm_U[ii]*times + wm_U)/(times+1)
                 extract_wm_V[ii] = (extract_wm_V[ii]*times + wm_V)/(times+1)
-
+            if i%int(self.length/100)==0:
+                self.valueChanged.emit(int(i/self.length*100))
 
 
         wm_index = np.arange(extract_wm.size)
@@ -316,7 +333,7 @@ class watermark():
         cv2.imwrite(os.path.join(path,'Y_U_V','Y'+file_name),extract_wm_Y.reshape(64,64))
         cv2.imwrite(os.path.join(path,'Y_U_V','U'+file_name),extract_wm_U.reshape(64,64))
         cv2.imwrite(os.path.join(path,'Y_U_V','V'+file_name),extract_wm_V.reshape(64,64))
-
+        self.valueChanged.emit(100)
 
 if __name__=="__main__":
     bwm1 = watermark(4399,2333,32)

@@ -17,7 +17,7 @@
 
 **todo list**
 
-- [ ] 添加支援恰饭途径
+- [x] 添加支援恰饭途径
 
 - [x] 支持多级离散小波变换
 - [x] 支持自动补以去除图片长宽需要是偶数的限制
@@ -38,9 +38,7 @@
   需满足
   ```
 
-$$
-[\frac{x}{2^d}]*[\frac{y}{2^d}]*\frac{1}{m*m}>wm\_size
-$$
+![条件](./pics_for_show/mic/gongshi.png)
 
 
 
@@ -156,7 +154,9 @@ bwm1.extract("out.png","out_wm.png")
 ```
 
 
+**支援恰饭**
 
+![Alipay](./pics_for_show/mic/alipay.png)![setu](pics_for_show/mic/setu_qrcode.png)
 
 
 ## 效果展示

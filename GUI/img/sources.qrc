@@ -1,0 +1,16 @@
+<RCC>
+  <qresource prefix="icon">
+    <file>file-add.png</file>
+    <file>question-circle.png</file>
+    <file>red envelope.png</file>
+    <file>Import.png</file>
+    <file>image.png</file>
+    <file>key.png</file>
+  </qresource>
+  <qresource prefix="pic">
+    <file>1563978351.png</file>
+    <file>gongshi.png</file>
+    <file>alipay.png</file>
+    <file>setu_qrcode.png</file>
+  </qresource>
+</RCC>
