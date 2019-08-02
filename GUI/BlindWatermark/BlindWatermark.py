@@ -330,6 +330,8 @@ class watermark(QThread):
         cv2.imwrite(out_wm_name,extract_wm.reshape(64,64))
 
         path,file_name = os.path.split(out_wm_name)
+        if not os.path.isdir(os.path.join(path,'Y_U_V')):
+            os.mkdir(os.path.join(path,'Y_U_V'))
         cv2.imwrite(os.path.join(path,'Y_U_V','Y'+file_name),extract_wm_Y.reshape(64,64))
         cv2.imwrite(os.path.join(path,'Y_U_V','U'+file_name),extract_wm_U.reshape(64,64))
         cv2.imwrite(os.path.join(path,'Y_U_V','V'+file_name),extract_wm_V.reshape(64,64))

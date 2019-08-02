@@ -8,7 +8,7 @@ from PyQt5.QtCore import QThread, pyqtSlot, pyqtSignal, QSize
 from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox, QListView,QDialog
 from PyQt5.QtGui import QStandardItem, QStandardItemModel, QIcon
 
-from BlindWatermark import watermark , average_ncc, average_psnr
+from BlindWatermark import watermark , average_ncc, average_psnr, recovery
 from Ui_main_win import Ui_MainWindow
 from Ui_about import Ui_Dialog
 from os import popen
@@ -19,6 +19,7 @@ import shutil
 
 class bwm_embed_thread(watermark):
     finish_out = pyqtSignal(str,str,dict)
+    assert_ERROR = pyqtSignal()
     def __init__(self,parameter,my_file_path):
 
         watermark.__init__(self, random_seed_wm = parameter['random_seed_wm'],
@@ -36,19 +37,27 @@ class bwm_embed_thread(watermark):
     def run(self):
         self.read_ori_img(self.ori_img_path)
         self.read_wm(self.wm_path)
-        # return self.bwm.embed2array()
-        self.embed(self.out_file_path)
+        ori_shape = self.ori_img_shape
+        wm_shape  = self.wm_shape
+        block_shape = self.block_shape
+        dwt_deep   = self.dwt_deep
+        if self.ori_img_shape[0]*self.ori_img_shape[1]/(4**(self.dwt_deep))>=self.wm_shape[0]*self.wm_shape[1]*self.block_shape[0]*self.block_shape[1]:
+            # return self.bwm.embed2array()
+            self.embed(self.out_file_path)
 
-        key_dic = {
-            'random_seed_wm' : self.random_seed_wm,
-            'random_seed_dct' : self.random_seed_dct,
-            'mod' : self.mod,
-            'mod2' : self.mod2,
-            'wm_shape' : self.wm_shape,
-            'block_shape' : self.block_shape,
-            'dwt_deep' : self.dwt_deep
-        }
-        self.finish_out.emit(self.out_file_path,'嵌入完成,保存于',key_dic)
+            key_dic = {
+                'random_seed_wm' : self.random_seed_wm,
+                'random_seed_dct' : self.random_seed_dct,
+                'mod' : self.mod,
+                'mod2' : self.mod2,
+                'wm_shape' : self.wm_shape,
+                'block_shape' : self.block_shape,
+                'dwt_deep' : self.dwt_deep
+            }
+            self.finish_out.emit(self.out_file_path,'嵌入完成,保存于',key_dic)
+        else:
+            self.assert_ERROR.emit()
+
 class bwm_extract_thread(watermark):
     finish_out = pyqtSignal(str,str)
     def __init__(self,parameter,my_file_path):
@@ -75,7 +84,17 @@ class open_pic_thread(QThread):
         self.file_path = file_path
     def run(self):
         popen('start '+self.file_path)
-    
+
+class explorer_thread(QThread):
+    def __init__(self, dir_path):
+        QThread.__init__(self)
+        self.dir_path = dir_path
+    def run(self):
+        self.dir_path = self.dir_path.replace('/','\\')
+        popen('explorer {}'.format(self.dir_path))
+
+
+
 class MainWindow(QMainWindow, Ui_MainWindow):
     """
     Class documentation goes here.
@@ -90,6 +109,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super(MainWindow, self).__init__(parent)
         self.setupUi(self)
         self.my_bwm_parameter = {}
+        self.my_recovery_parameter = {}
         self.init_listVIew()
     
     def my_setup(self):
@@ -122,9 +142,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             clipboard.setText(file_path) #此处为密钥
         else:
             self.open_pic = open_pic_thread(file_path)
-            self.open_pic.start()
             self.open_pic.finished.connect(self.open_pic.deleteLater)
+            self.open_pic.start()
         # QMessageBox.information(self,"ListView",'row:%s, text:%s' % (index.row(), index.data()))
+
+    def assert_error(self):
+        QMessageBox.warning(self,'警告','参数错误,请参考关于中的公式修改参数,使其满足公式',QMessageBox.Ok)
 
     def bwm_add_item(self,file_path,action_type=None,key=None):
         #路径中不允许出现\ / : * ? " < > →
@@ -164,12 +187,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.spinBox.setValue(bwm_parameter['dwt_deep'])
         self.refresh_parameter()
 
+    def show_recovery(self,num,file_path):
+        if num == 0:
+            QMessageBox.warning(self,"警告",'检测到的特征点过少,请适当调低阈值',QMessageBox.Ok)
+        else:
+            self.open_pic = open_pic_thread(file_path)
+            self.open_pic.finished.connect(self.open_pic.deleteLater)
+            self.open_pic.start()
+            QMessageBox.information(self,"提示",'检测到{}个特征点,恢复图片已写入'.format(num),QMessageBox.Ok)
+
+
     @pyqtSlot()
     def on_pushButton_clicked(self):
         """
         Slot documentation goes here.
         """
-        my_file_path,_ = QFileDialog.getOpenFileName(self, '导入图片', './')
+        my_file_path,_ = QFileDialog.getOpenFileName(self, '导入图片', self.my_bwm_parameter.get('work_path','./'))
         if my_file_path:
             self.my_bwm_parameter['ori_img'] = my_file_path
             self.label_4.setText(my_file_path.split('/')[-1])
@@ -179,7 +212,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         Slot documentation goes here.
         """
-        my_file_path,_ = QFileDialog.getOpenFileName(self, '导入水印', './')
+        my_file_path,_ = QFileDialog.getOpenFileName(self, '导入水印', self.my_bwm_parameter.get('work_path','./'))
         if my_file_path:
             self.my_bwm_parameter['wm'] = my_file_path
             self.label_5.setText(my_file_path.split('/')[-1])
@@ -211,11 +244,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if self.my_bwm_parameter['mod'] <0.01:
                     QMessageBox.warning(self,"警告",'第一个量化因子:{}不符合要求'.format(self.my_bwm_parameter['mod']),QMessageBox.Ok)
                 else:
-                    my_file_path,_ = QFileDialog.getSaveFileName(self, '保存图片', self.my_bwm_parameter.get('work_path','./'))
+                    my_file_path,_ = QFileDialog.getSaveFileName(self, '保存图片', self.my_bwm_parameter.get('work_path','./'),"PNG (*.png);;JPG (*.jpg);;All Files (*)")
                     if my_file_path:
                         self._thread = bwm_embed_thread(self.my_bwm_parameter,my_file_path)
                         self._thread.finished.connect(self._thread.deleteLater)
                         self._thread.finish_out.connect(self.bwm_add_item)
+                        self._thread.assert_ERROR.connect(self.assert_error)
                         self._thread.valueChanged.connect(self.BlueProgressBar.setValue)
                         self._thread.start()
             else:
@@ -228,7 +262,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 elif self.my_bwm_parameter['wm_shape'][0] == 0 or self.my_bwm_parameter['wm_shape'][1] == 0:
                     QMessageBox.warning(self,"警告",'提取时需要设定水印形状',QMessageBox.Ok)
                 else:
-                    my_file_path,_ = QFileDialog.getSaveFileName(self, '保存图片', self.my_bwm_parameter.get('work_path','./'))
+                    my_file_path,_ = QFileDialog.getSaveFileName(self, '保存图片', self.my_bwm_parameter.get('work_path','./'),"PNG (*.png);;JPG (*.jpg);;All Files (*)")
                     if my_file_path:
                         self._thread = bwm_extract_thread(self.my_bwm_parameter,my_file_path)
                         self._thread.finished.connect(self._thread.deleteLater)
@@ -329,6 +363,58 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.information(self,'信息',string,QMessageBox.Ok)
 
     @pyqtSlot()
+    def on_pushButton_8_clicked(self):
+        """
+        读取原图
+        """
+        file_path,_ = QFileDialog.getOpenFileName(self, '读取原图', self.my_bwm_parameter.get('work_path','./'))
+        if file_path:
+            self.my_recovery_parameter['ori_img'] = file_path
+    
+    @pyqtSlot()
+    def on_pushButton_9_clicked(self):
+        """
+        读取受到攻击的图片
+        """
+        file_path,_ = QFileDialog.getOpenFileName(self, '读取受到攻击的图片', self.my_bwm_parameter.get('work_path','./'))
+        if file_path:
+            self.my_recovery_parameter['attacked_img'] = file_path
+    
+    @pyqtSlot()
+    def on_pushButton_10_clicked(self):
+        """
+        恢复
+        """
+        ori_img = self.my_recovery_parameter.get('ori_img',None)
+        attacked_img = self.my_recovery_parameter.get('attacked_img',None)
+        if not ori_img:
+            QMessageBox.warning(self,"警告",'未读取原图',QMessageBox.Ok)
+        elif not attacked_img:
+            QMessageBox.warning(self,"警告",'未读取受到攻击的图片',QMessageBox.Ok)
+        else:
+            outfile_path,_ = QFileDialog.getSaveFileName(self, '恢复图片', self.my_bwm_parameter.get('work_path','./'),"PNG (*.png);;All Files (*)")
+            if outfile_path:
+                rate = self.doubleSpinBox_3.value()
+                self.recovery_thread = recovery(ori_img,attacked_img,outfile_path,rate)
+                self.recovery_thread.finished.connect(self.recovery_thread.deleteLater)
+                self.recovery_thread.num_of_good.connect(self.show_recovery)
+                self.recovery_thread.start()
+
+    @pyqtSlot()
+    def on_pushButton_11_clicked(self):
+        """
+        打开工作目录
+        """
+        work_path = self.my_bwm_parameter.get('work_path',None)
+        if work_path:
+            self.explorer_thread = explorer_thread(work_path)
+            self.explorer_thread.finished.connect(self.explorer_thread.deleteLater)
+            self.explorer_thread.start()
+        else:
+            QMessageBox.warning(self,"警告",'未设定工作目录',QMessageBox.Ok)
+
+
+    @pyqtSlot()
     def on_help_triggered(self):
         """
         Slot documentation goes here.
@@ -351,4 +437,4 @@ if __name__ == "__main__":
     ui.show()
     sys.exit(app.exec_())
     
-
+    
