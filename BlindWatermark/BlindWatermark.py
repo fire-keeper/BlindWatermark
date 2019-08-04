@@ -310,14 +310,14 @@ class watermark():
         extract_wm_Y[wm_index] = extract_wm_Y.copy()
         extract_wm_U[wm_index] = extract_wm_U.copy()
         extract_wm_V[wm_index] = extract_wm_V.copy()
-        cv2.imwrite(out_wm_name,extract_wm.reshape(64,64))
+        cv2.imwrite(out_wm_name,extract_wm.reshape(self.wm_shape[0],self.wm_shape[1]))
 
         path,file_name = os.path.split(out_wm_name)
         if not os.path.isdir(os.path.join(path,'Y_U_V')):
             os.mkdir(os.path.join(path,'Y_U_V'))
-        cv2.imwrite(os.path.join(path,'Y_U_V','Y'+file_name),extract_wm_Y.reshape(64,64))
-        cv2.imwrite(os.path.join(path,'Y_U_V','U'+file_name),extract_wm_U.reshape(64,64))
-        cv2.imwrite(os.path.join(path,'Y_U_V','V'+file_name),extract_wm_V.reshape(64,64))
+        cv2.imwrite(os.path.join(path,'Y_U_V','Y'+file_name),extract_wm_Y.reshape(self.wm_shape[0],self.wm_shape[1]))
+        cv2.imwrite(os.path.join(path,'Y_U_V','U'+file_name),extract_wm_U.reshape(self.wm_shape[0],self.wm_shape[1]))
+        cv2.imwrite(os.path.join(path,'Y_U_V','V'+file_name),extract_wm_V.reshape(self.wm_shape[0],self.wm_shape[1]))
 
 
 if __name__=="__main__":
