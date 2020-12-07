@@ -3,6 +3,7 @@ import cv2
 from pywt import dwt2,idwt2
 import os
 from PyQt5.QtCore import pyqtSignal, QThread
+from .tools import cv_imread,cv_imwrite
 
 class watermark(QThread):
     #just for pyqt
@@ -38,7 +39,7 @@ class watermark(QThread):
 
     def read_ori_img(self,filename):
         #傻逼opencv因为数组类型不会变,输入是uint8输出也是uint8,而UV可以是负数且uint8会去掉小数部分
-        ori_img = cv2.imread(filename).astype(np.float32)
+        ori_img = cv_imread(filename).astype(np.float32)
         self.ori_img_shape = ori_img.shape[:2]
         if self.color_mod == 'RGB':
             self.ori_img_YUV = ori_img
@@ -100,7 +101,7 @@ class watermark(QThread):
         
 
     def read_wm(self,filename):
-        self.wm = cv2.imread(filename)[:,:,0]
+        self.wm = cv_imread(filename)[:,:,0]
         self.wm_shape = self.wm.shape[:2]
 
         #初始化块索引数组,因为需要验证块是否足够存储水印信息,所以才放在这儿
@@ -210,7 +211,7 @@ class watermark(QThread):
     def embed(self,filename,write=True):
         self.embed_img = self.embed2array()
         if write:
-            cv2.imwrite(filename,self.embed_img)
+            cv_imwrite(filename,self.embed_img)
 
 
     def block_get_wm(self,block,index):
@@ -236,7 +237,7 @@ class watermark(QThread):
             return 0
         
         #读取图片
-        embed_img = cv2.imread(filename).astype(np.float32)
+        embed_img = cv_imread(filename).astype(np.float32)
         if self.color_mod == 'RGB':
             embed_img_YUV = embed_img
         elif self.color_mod == 'YUV':
@@ -327,14 +328,14 @@ class watermark(QThread):
         extract_wm_Y[wm_index] = extract_wm_Y.copy()
         extract_wm_U[wm_index] = extract_wm_U.copy()
         extract_wm_V[wm_index] = extract_wm_V.copy()
-        cv2.imwrite(out_wm_name,extract_wm.reshape(self.wm_shape[0],self.wm_shape[1]))
+        cv_imwrite(out_wm_name,extract_wm.reshape(self.wm_shape[0],self.wm_shape[1]))
 
         path,file_name = os.path.split(out_wm_name)
         if not os.path.isdir(os.path.join(path,'Y_U_V')):
             os.mkdir(os.path.join(path,'Y_U_V'))
-        cv2.imwrite(os.path.join(path,'Y_U_V','Y'+file_name),extract_wm_Y.reshape(self.wm_shape[0],self.wm_shape[1]))
-        cv2.imwrite(os.path.join(path,'Y_U_V','U'+file_name),extract_wm_U.reshape(self.wm_shape[0],self.wm_shape[1]))
-        cv2.imwrite(os.path.join(path,'Y_U_V','V'+file_name),extract_wm_V.reshape(self.wm_shape[0],self.wm_shape[1]))
+        cv_imwrite(os.path.join(path,'Y_U_V','Y'+file_name),extract_wm_Y.reshape(self.wm_shape[0],self.wm_shape[1]))
+        cv_imwrite(os.path.join(path,'Y_U_V','U'+file_name),extract_wm_U.reshape(self.wm_shape[0],self.wm_shape[1]))
+        cv_imwrite(os.path.join(path,'Y_U_V','V'+file_name),extract_wm_V.reshape(self.wm_shape[0],self.wm_shape[1]))
         self.valueChanged.emit(100)
 
 if __name__=="__main__":

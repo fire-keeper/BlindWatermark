@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Tasks SYSTEM "Tasks-6.0.dtd">
+<!-- eric6 tasks file for project BlindWatermark -->
+<!-- Saved: 2020-12-03, 20:13:02 -->
+<Tasks version="6.0">
+  <ProjectScanFilter></ProjectScanFilter>
+  <Task priority="1" completed="False" type="1" uid="{ac0265be-54c7-4647-8602-4d7ea9dcdeec}">
+    <Summary>TODO: not implemented yet</Summary>
+    <Description></Description>
+    <Created>2020-12-03, 11:55:39</Created>
+    <Resource>
+      <Filename>main_win.py</Filename>
+      <Linenumber>422</Linenumber>
+    </Resource>
+  </Task>
+</Tasks>

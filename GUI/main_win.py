@@ -19,7 +19,7 @@ import shutil
 
 class bwm_embed_thread(watermark):
     finish_out = pyqtSignal(str,str,dict)
-    assert_ERROR = pyqtSignal()
+    assert_ERROR = pyqtSignal(int)
     def __init__(self,parameter,my_file_path):
 
         watermark.__init__(self, random_seed_wm = parameter['random_seed_wm'],
@@ -35,28 +35,74 @@ class bwm_embed_thread(watermark):
         self.out_file_path = my_file_path
 
     def run(self):
-        self.read_ori_img(self.ori_img_path)
-        self.read_wm(self.wm_path)
-        ori_shape = self.ori_img_shape
-        wm_shape  = self.wm_shape
-        block_shape = self.block_shape
-        dwt_deep   = self.dwt_deep
-        if self.ori_img_shape[0]*self.ori_img_shape[1]/(4**(self.dwt_deep))>=self.wm_shape[0]*self.wm_shape[1]*self.block_shape[0]*self.block_shape[1]:
-            # return self.bwm.embed2array()
-            self.embed(self.out_file_path)
-
-            key_dic = {
-                'random_seed_wm' : self.random_seed_wm,
-                'random_seed_dct' : self.random_seed_dct,
-                'mod' : self.mod,
-                'mod2' : self.mod2,
-                'wm_shape' : self.wm_shape,
-                'block_shape' : self.block_shape,
-                'dwt_deep' : self.dwt_deep
-            }
-            self.finish_out.emit(self.out_file_path,'嵌入完成,保存于',key_dic)
+        if os.path.isdir(self.out_file_path):
+            if len(self.ori_img_path)>1 and len(self.wm_path)==1:
+                #多对一模式
+                for ori_img in self.ori_img_path:
+                    self.read_ori_img(ori_img)
+                    self.read_wm(self.wm_path[0])
+                    if self.ori_img_shape[0]*self.ori_img_shape[1]/(4**(self.dwt_deep))>=self.wm_shape[0]*self.wm_shape[1]*self.block_shape[0]*self.block_shape[1]:
+                        # return self.bwm.embed2array()
+                        out_file_name = os.path.join(self.out_file_path,os.path.split(ori_img)[-1])
+                        self.embed(out_file_name)
+                    else:
+                        self.assert_ERROR.emit(0)
+                key_dic = {
+                            'random_seed_wm' : self.random_seed_wm,
+                            'random_seed_dct' : self.random_seed_dct,
+                            'mod' : self.mod,
+                            'mod2' : self.mod2,
+                            'wm_shape' : self.wm_shape,
+                            'block_shape' : self.block_shape,
+                            'dwt_deep' : self.dwt_deep
+                        }
+                self.finish_out.emit(self.out_file_path,'嵌入完成,非一对一',key_dic)
+            elif len(self.ori_img_path)==1 and len(self.wm_path)>1:
+                for wm_path in self.wm_path:
+                    self.read_ori_img(self.ori_img_path[0])
+                    self.read_wm(wm_path)
+                    if self.ori_img_shape[0]*self.ori_img_shape[1]/(4**(self.dwt_deep))>=self.wm_shape[0]*self.wm_shape[1]*self.block_shape[0]*self.block_shape[1]:
+                        # return self.bwm.embed2array()
+                        img_name_prefix,img_name_postfix = os.path.splitext(os.path.split(self.ori_img_path[0])[-1])
+                        wm_prefix,_ = os.path.splitext(os.path.split(wm_path)[-1])
+                        out_file_name = os.path.join(self.out_file_path,"{}_{}{}".format(img_name_prefix,wm_prefix,img_name_postfix))
+                        self.embed(out_file_name)
+                    else:
+                        self.assert_ERROR.emit(0)
+                key_dic = {
+                            'random_seed_wm' : self.random_seed_wm,
+                            'random_seed_dct' : self.random_seed_dct,
+                            'mod' : self.mod,
+                            'mod2' : self.mod2,
+                            'wm_shape' : self.wm_shape,
+                            'block_shape' : self.block_shape,
+                            'dwt_deep' : self.dwt_deep
+                        }
+                self.finish_out.emit(self.out_file_path,'嵌入完成,非一对一',key_dic)
+            else:
+                self.assert_ERROR.emit(1)
         else:
-            self.assert_ERROR.emit()
+            #一对一模式
+            assert len(self.ori_img_path) == len(self.wm_path)==1
+            self.read_ori_img(self.ori_img_path[0])
+            self.read_wm(self.wm_path[0])
+
+            if self.ori_img_shape[0]*self.ori_img_shape[1]/(4**(self.dwt_deep))>=self.wm_shape[0]*self.wm_shape[1]*self.block_shape[0]*self.block_shape[1]:
+                # return self.bwm.embed2array()
+                self.embed(self.out_file_path)
+
+                key_dic = {
+                    'random_seed_wm' : self.random_seed_wm,
+                    'random_seed_dct' : self.random_seed_dct,
+                    'mod' : self.mod,
+                    'mod2' : self.mod2,
+                    'wm_shape' : self.wm_shape,
+                    'block_shape' : self.block_shape,
+                    'dwt_deep' : self.dwt_deep
+                }
+                self.finish_out.emit(self.out_file_path,'嵌入完成,保存于',key_dic)
+            else:
+                self.assert_ERROR.emit(0)
 
 class bwm_extract_thread(watermark):
     finish_out = pyqtSignal(str,str)
@@ -75,8 +121,16 @@ class bwm_extract_thread(watermark):
 
     def run(self):
         # return self.bwm.embed2array()
-        self.extract(self.ori_img_path,self.out_file_path)
-        self.finish_out.emit(self.out_file_path,'提取完成,保存于')
+        if os.path.isdir(self.out_file_path):
+            for ori_img in self.ori_img_path:
+                file_name = os.path.split(ori_img)[-1]
+                self.extract(ori_img,os.path.join(self.out_file_path,"wm_"+file_name))
+            self.finish_out.emit(self.out_file_path,'提取完成,非一对一')
+        else:
+            #单一提取模式
+            assert len(self.ori_img_path)==1
+            self.extract(self.ori_img_path[0],self.out_file_path)
+            self.finish_out.emit(self.out_file_path,'提取完成,保存于')
 
 class open_pic_thread(QThread):
     def __init__(self,file_path):
@@ -140,17 +194,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if index.data()[:4]=='使用密钥':
             clipboard = QApplication.clipboard()
             clipboard.setText(file_path) #此处为密钥
+        elif index.data()[:5]=='批处理模式':
+            pass
         else:
             self.open_pic = open_pic_thread(file_path)
             self.open_pic.finished.connect(self.open_pic.deleteLater)
             self.open_pic.start()
         # QMessageBox.information(self,"ListView",'row:%s, text:%s' % (index.row(), index.data()))
 
-    def assert_error(self):
-        QMessageBox.warning(self,'警告','参数错误,请参考关于中的公式修改参数,使其满足公式',QMessageBox.Ok)
+    def assert_error(self,Etype):
+        if Etype==0:
+            QMessageBox.warning(self,'警告','参数错误,请参考关于中的公式修改参数,使其满足公式',QMessageBox.Ok)
+        else:
+            QMessageBox.warning(self,'警告','出现多对多的情况，请向开发者汇报(不会真的出现吧)',QMessageBox.Ok)
 
     def bwm_add_item(self,file_path,action_type=None,key=None):
         #路径中不允许出现\ / : * ? " < > →
+        
         if action_type == '嵌入完成,保存于':
             self.listView_model.appendRow(QStandardItem(QIcon(':/icon/key.png'),'使用密钥→'+json.dumps(key)))
             similarity_value = ''
@@ -165,6 +225,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.listView_model.appendRow(QStandardItem(QIcon(':/icon/image.png'),action_type+'→'+file_path))
         elif action_type == '提取完成,保存于':
             self.listView_model.appendRow(QStandardItem(QIcon(':/icon/image.png'),action_type+'→'+file_path))
+        elif action_type == '嵌入完成,非一对一':
+            self.listView_model.appendRow(QStandardItem(QIcon(':/icon/image.png'),"批处理模式,嵌入完成!"+'→'+file_path))
+        elif action_type == '提取完成,非一对一':
+            self.listView_model.appendRow(QStandardItem(QIcon(':/icon/image.png'),"批处理模式,提取完成!"+'→'+file_path))
 
     def refresh_parameter(self):
         self.my_bwm_parameter['random_seed_wm'] = self.spinBox_3.value()
@@ -202,20 +266,35 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         Slot documentation goes here.
         """
-        my_file_path,_ = QFileDialog.getOpenFileName(self, '导入图片', self.my_bwm_parameter.get('work_path','./'))
-        if my_file_path:
-            self.my_bwm_parameter['ori_img'] = my_file_path
-            self.label_4.setText(my_file_path.split('/')[-1])
+        my_file_paths,_ = QFileDialog.getOpenFileNames(self, '导入图片', self.my_bwm_parameter.get('work_path','./'))
+        if my_file_paths:
+            if len(my_file_paths)==1:
+                self.my_bwm_parameter['ori_img'] = my_file_paths
+                self.label_4.setText(my_file_paths[0].split('/')[-1])
+            else:
+                if len(self.my_bwm_parameter.get('wm',tuple()))<=1:
+                    self.my_bwm_parameter['ori_img'] = my_file_paths
+                    self.label_4.setText("多个文件")
+                else:
+                    QMessageBox.warning(self,"警告",'原图和水印最多只能有一个是多个文件',QMessageBox.Ok)
         
     @pyqtSlot()
     def on_pushButton_2_clicked(self):
         """
         Slot documentation goes here.
         """
-        my_file_path,_ = QFileDialog.getOpenFileName(self, '导入水印', self.my_bwm_parameter.get('work_path','./'))
-        if my_file_path:
-            self.my_bwm_parameter['wm'] = my_file_path
-            self.label_5.setText(my_file_path.split('/')[-1])
+        my_file_paths,_ = QFileDialog.getOpenFileNames(self, '导入水印', self.my_bwm_parameter.get('work_path','./'))
+        if my_file_paths:
+            if len(my_file_paths)==1:
+                self.my_bwm_parameter['wm'] = my_file_paths
+                self.label_5.setText(my_file_paths[0].split('/')[-1])
+            else:
+                if len(self.my_bwm_parameter.get('ori_img',tuple()))<=1:
+                    self.my_bwm_parameter['wm'] = my_file_paths
+                    self.label_5.setText("多个文件")
+                else:
+                    QMessageBox.warning(self,"警告",'原图和水印最多只能有一个是多个文件',QMessageBox.Ok)
+
     
     @pyqtSlot()
     def on_radioButton_2_clicked(self):
@@ -244,14 +323,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if self.my_bwm_parameter['mod'] <0.01:
                     QMessageBox.warning(self,"警告",'第一个量化因子:{}不符合要求'.format(self.my_bwm_parameter['mod']),QMessageBox.Ok)
                 else:
-                    my_file_path,_ = QFileDialog.getSaveFileName(self, '保存图片', self.my_bwm_parameter.get('work_path','./'),"PNG (*.png);;JPG (*.jpg);;All Files (*)")
-                    if my_file_path:
-                        self._thread = bwm_embed_thread(self.my_bwm_parameter,my_file_path)
-                        self._thread.finished.connect(self._thread.deleteLater)
-                        self._thread.finish_out.connect(self.bwm_add_item)
-                        self._thread.assert_ERROR.connect(self.assert_error)
-                        self._thread.valueChanged.connect(self.BlueProgressBar.setValue)
-                        self._thread.start()
+                    N_ori_img = len(self.my_bwm_parameter.get('ori_img'))
+                    N_wm      = len(self.my_bwm_parameter.get('wm'))
+                    if N_ori_img == 1 and N_wm == 1:
+                        my_file_path,_ = QFileDialog.getSaveFileName(self, '保存图片', self.my_bwm_parameter.get('work_path','./'),"PNG (*.png);;JPG (*.jpg);;All Files (*)")
+                        if my_file_path:
+                            self._thread = bwm_embed_thread(self.my_bwm_parameter,my_file_path)
+                            self._thread.finished.connect(self._thread.deleteLater)
+                            self._thread.finish_out.connect(self.bwm_add_item)
+                            self._thread.assert_ERROR.connect(self.assert_error)
+                            self._thread.valueChanged.connect(self.BlueProgressBar.setValue)
+                            self._thread.start()
+                    else:
+                        output_path = QFileDialog.getExistingDirectory(self,'设置输出目录',self.my_bwm_parameter.get('work_path','./'))
+                        if output_path:
+                            self._thread = bwm_embed_thread(self.my_bwm_parameter,output_path)
+                            self._thread.finished.connect(self._thread.deleteLater)
+                            self._thread.finish_out.connect(self.bwm_add_item)
+                            self._thread.assert_ERROR.connect(self.assert_error)
+                            self._thread.valueChanged.connect(self.BlueProgressBar.setValue)
+                            self._thread.start()
             else:
                 QMessageBox.warning(self,"警告",'你需要打开原始图片和水印图片,才能进行嵌入',QMessageBox.Ok)
         elif self.pushButton_3.text()=='提取':
@@ -262,13 +353,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 elif self.my_bwm_parameter['wm_shape'][0] == 0 or self.my_bwm_parameter['wm_shape'][1] == 0:
                     QMessageBox.warning(self,"警告",'提取时需要设定水印形状',QMessageBox.Ok)
                 else:
-                    my_file_path,_ = QFileDialog.getSaveFileName(self, '保存图片', self.my_bwm_parameter.get('work_path','./'),"PNG (*.png);;JPG (*.jpg);;All Files (*)")
-                    if my_file_path:
-                        self._thread = bwm_extract_thread(self.my_bwm_parameter,my_file_path)
-                        self._thread.finished.connect(self._thread.deleteLater)
-                        self._thread.finish_out.connect(self.bwm_add_item)
-                        self._thread.valueChanged.connect(self.BlueProgressBar.setValue)
-                        self._thread.start()
+                    N_ori_img = len(self.my_bwm_parameter.get('ori_img'))
+                    if N_ori_img==1:
+                        my_file_path,_ = QFileDialog.getSaveFileName(self, '保存图片', self.my_bwm_parameter.get('work_path','./'),"PNG (*.png);;JPG (*.jpg);;All Files (*)")
+                        if my_file_path:
+                            self._thread = bwm_extract_thread(self.my_bwm_parameter,my_file_path)
+                            self._thread.finished.connect(self._thread.deleteLater)
+                            self._thread.finish_out.connect(self.bwm_add_item)
+                            self._thread.valueChanged.connect(self.BlueProgressBar.setValue)
+                            self._thread.start()
+                    else:
+                        output_path = QFileDialog.getExistingDirectory(self,'设置输出目录',self.my_bwm_parameter.get('work_path','./'))
+                        if output_path:
+                            self._thread = bwm_extract_thread(self.my_bwm_parameter,output_path)
+                            self._thread.finished.connect(self._thread.deleteLater)
+                            self._thread.finish_out.connect(self.bwm_add_item)
+                            self._thread.valueChanged.connect(self.BlueProgressBar.setValue)
+                            self._thread.start()
             else:
                 QMessageBox.warning(self,"警告",'你需要打开要提取水印的图片,才能进行提取',QMessageBox.Ok)
 
@@ -327,12 +428,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         work_path = self.my_bwm_parameter.get('work_path','.')
         key_path,_ = QFileDialog.getOpenFileName(self, '选择key文件', work_path,"json File (*.json);;All Files (*)")
-        try:
-            with open(key_path,'r') as f:
-                key = json.load(f)
-                self.refresh_UI(key)
-        except json.decoder.JSONDecodeError:
-            QMessageBox.warning(self,"警告",'key文件的文本不符合key的格式(即json格式)',QMessageBox.Ok)
+        if key_path:
+            try:
+                with open(key_path,'r') as f:
+                    key = json.load(f)
+                    self.refresh_UI(key)
+            except json.decoder.JSONDecodeError:
+                QMessageBox.warning(self,"警告",'key文件的文本不符合key的格式(即json格式)',QMessageBox.Ok)
 
     @pyqtSlot()
     def on_pushButton_4_clicked(self):
@@ -340,11 +442,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         将图片复制到工作目录
         """
         work_path = self.my_bwm_parameter.get('work_path',None)
+        ori_img_path = self.my_bwm_parameter.get('ori_img',False)
+        wm_path = self.my_bwm_parameter.get('wm',False)
+        if bool(ori_img_path):
+            if isinstance(ori_img_path,list) and len(ori_img_path)>1:
+                QMessageBox.information(self,'信息',"在多个文件的情况下该功能已被禁用",QMessageBox.Ok)
+                return
+        if bool(wm_path):
+            if isinstance(wm_path,list) and len(wm_path)>1:
+                QMessageBox.information(self,'信息',"在多个文件的情况下该功能已被禁用",QMessageBox.Ok)
+                return
         if not work_path:
             QMessageBox.warning(self,"警告",'未设定工作目录',QMessageBox.Ok)
         else:
             string = 'Done!\n'
-            ori_img_path = self.my_bwm_parameter.get('ori_img',False)
+            if isinstance(ori_img_path,list):
+                ori_img_path = ori_img_path[0]
             if bool(ori_img_path) and os.path.isfile(ori_img_path):
                 img_type = os.path.splitext(ori_img_path)[-1]
                 try:
@@ -352,7 +465,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     string+=(ori_img_path+' → '+work_path+'ori'+img_type+'\n')
                 except shutil.SameFileError:
                     string+='原图片已存在于工作目录\n'
-            wm_path = self.my_bwm_parameter.get('wm',False)
+            
             if bool(wm_path) and os.path.isfile(wm_path):
                 img_type = os.path.splitext(wm_path)[-1]
                 try:

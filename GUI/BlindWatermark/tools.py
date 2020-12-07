@@ -1,8 +1,15 @@
 import cv2
 import numpy as np 
 from PyQt5.QtCore import pyqtSignal, QThread
+import os
 
+def cv_imread(file_path):
+    cv_img = cv2.imdecode(np.fromfile(file_path, dtype=np.uint8),cv2.IMREAD_COLOR)
+    return cv_img
 
+def cv_imwrite(path,img):
+    suffix = os.path.splitext(path)[-1]
+    cv2.imencode(suffix, img)[1].tofile(path)
 
 class recovery(QThread):
     num_of_good=pyqtSignal(int,str)

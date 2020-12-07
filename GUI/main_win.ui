@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>925</width>
-    <height>785</height>
+    <width>1044</width>
+    <height>845</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -30,13 +30,13 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>3</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
         <string>盲水印</string>
        </attribute>
-       <layout class="QGridLayout" name="gridLayout_4">
+       <layout class="QGridLayout" name="gridLayout_4" columnstretch="2,1">
         <item row="7" column="1">
          <widget class="QFrame" name="frame_3">
           <property name="frameShape">
@@ -67,6 +67,9 @@
             <widget class="QDoubleSpinBox" name="doubleSpinBox">
              <property name="maximum">
               <double>399.990000000000009</double>
+             </property>
+             <property name="value">
+              <double>1.000000000000000</double>
              </property>
             </widget>
            </item>
@@ -111,22 +114,18 @@
           <property name="frameShadow">
            <enum>QFrame::Raised</enum>
           </property>
-          <layout class="QGridLayout" name="gridLayout_2">
-           <item row="0" column="0">
-            <widget class="QPushButton" name="pushButton">
-             <property name="text">
-              <string>导入图片</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
+          <layout class="QGridLayout" name="gridLayout_2" columnstretch="1,1">
+           <property name="sizeConstraint">
+            <enum>QLayout::SetDefaultConstraint</enum>
+           </property>
+           <item row="2" column="0">
             <widget class="QPushButton" name="pushButton_2">
              <property name="text">
               <string>导入水印</string>
              </property>
             </widget>
            </item>
-           <item row="1" column="1">
+           <item row="2" column="1">
             <widget class="QLabel" name="label_5">
              <property name="text">
               <string/>
@@ -136,13 +135,20 @@
              </property>
             </widget>
            </item>
-           <item row="0" column="1">
+           <item row="1" column="1">
             <widget class="QLabel" name="label_4">
              <property name="text">
               <string/>
              </property>
              <property name="wordWrap">
               <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QPushButton" name="pushButton">
+             <property name="text">
+              <string>导入图片</string>
              </property>
             </widget>
            </item>
@@ -685,7 +691,7 @@ p, li { white-space: pre-wrap; }
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>925</width>
+     <width>1044</width>
      <height>26</height>
     </rect>
    </property>
