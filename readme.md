@@ -78,7 +78,7 @@
 
 *恰饭警告* 请关注我的B站账号,三连, 和star
 
-使用`git pull https://github.com/fire-keeper/BlindWatermark.git`或者直接下载压缩包把项目拉到本地, 然后在项目目录下
+使用`git clone https://github.com/fire-keeper/BlindWatermark.git`或者直接下载压缩包把项目拉到本地, 然后在项目目录下
 
 **命令行版**
 
